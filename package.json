@@ -10,6 +10,7 @@
     "body-parser": "~1.13.2",
     "express": "~4.13.1",
     "react": "^0.14.7",
+    "react-cookie": "^0.4.5",
     "react-dom": "^0.14.7",
     "slack": "^6.1.0",
     "string": "^3.3.1"

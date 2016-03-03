@@ -1,21 +1,20 @@
 import * as React from 'react';
 import {render} from 'react-dom';
 import * as Core from '../core';
+import * as cookie from 'react-cookie';
 
 
 class App extends React.Component {
 
-  constructor(){
-    super();
+  constructor(props){
+    super(props);
+    this.state = {
+      slackToken: cookie.load('slackToken') || '',
+      slackChannel: cookie.load('slackChannel') || '',
+      slackBot: cookie.load('slackBot') || ''
+    };
     this.runGame = this.runGame.bind(this);
-  }
-
-  componentDidMount() {
-    this.setState({
-      slackToken: '',
-      slackChannel: '',
-      slackBot: ''
-    });
+    this.setValue = this.setValue.bind(this);
   }
 
   render() {
@@ -40,15 +39,15 @@ class App extends React.Component {
         <h3>Enter your room details</h3>
         <div className="form-group">
           <label htmlFor="slackToken">Slack Token</label>
-          <input className="form-control" type="text" id="slackToken" onChange={ (evt) => this.setState({slackToken: evt.target.value }) } />
+          <input className="form-control" value={ this.state.slackToken } type="text" id="slackToken" onChange={ evt => this.setValue('slackToken', evt.target.value) } />
         </div>
         <div className="form-group">
           <label htmlFor="slackChannel">Slack Channel</label>
-          <input className="form-control" type="text" id="slackChannel" onChange={ (evt) => this.setState({slackChannel: evt.target.value }) } />
+          <input className="form-control" value={ this.state.slackChannel } type="text" id="slackChannel" onChange={ evt => this.setValue('slackChannel', evt.target.value) } />
         </div>
         <div className="form-group">
           <label htmlFor="slackBot">Slack Bot Id</label>
-          <input className="form-control" type="text" id="slackBot" onChange={ (evt) => this.setState({slackBot: evt.target.value }) } />
+          <input className="form-control" value={ this.state.slackBot } type="text" id="slackBot" onChange={ evt => this.setValue( 'slackBot', evt.target.value ) } />
         </div>
         <button className="btn btn-primary" onClick={this.runGame}>
           Go!
@@ -56,6 +55,13 @@ class App extends React.Component {
       </div>
     }
 
+  }
+
+  setValue(name, value){
+    const obj = {};
+    obj[name] = value;
+    this.setState(obj);
+    cookie.save(name, value);
   }
 
   runGame() {
