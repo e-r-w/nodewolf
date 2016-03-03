@@ -409,10 +409,6 @@ class Game extends EventEmitter {
   }
 
   _assignRole(role) {
-    if(role === ROLE.STANDARD.SEER){
-      this.players.filter(player=>player.name === 'ethan')[0].role = role;
-      return;
-    }
     const playersWithoutRole = this._playersWithoutRole();
     let player;
     if(playersWithoutRole.length === 1){
