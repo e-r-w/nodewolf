@@ -1,0 +1,22 @@
+
+module.exports = {
+
+
+  STANDARD: {
+    SEER: 'SEER',
+    VILLAGER: 'VILLAGER',
+    WEREWOLF: 'WEREWOLF'
+  },
+  COMPLEX: {
+    BEHOLDER: 'BEHOLDER',
+    TANNER: 'TANNER',
+    LYCAN: 'LYCAN',
+    MINION: 'MINION',
+    WOLFMAN: 'WOLFMAN',
+    BODYGUARD: 'BODYGUARD',
+    TOUGH_GUY: 'TOUGH_GUY',
+    INSOMNIAC: 'INSOMNIAC',
+    PACIFIST: 'PACIFIST'
+  }
+
+};

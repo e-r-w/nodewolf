@@ -1,0 +1,1 @@
+module.exports = process.env.SLACK_TOKEN;
