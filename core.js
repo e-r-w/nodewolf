@@ -17,10 +17,10 @@ const dead          = require('./handlers/dead');
 const vote          = require('./handlers/vote');
 const kill          = require('./handlers/kill');
 
-exports.run = function(){
+exports.run = function(token, channel, id){
 
   const Bot = require('./bot');
-  const bot = new Bot(process.env.SLACK_CHANNEL, process.env.SLACKKBOT_ID);
+  const bot = new Bot(token, channel, id);
 
   return Promise.all([
     bot.start(),

@@ -8,7 +8,7 @@ module.exports = function(bot, game, msg){
   else if(game.status === STATUS.IDLE){
     bot.channelMessage(messages.gameNotInProgress);
   }
-  else if(game.players.length < 1){
+  else if(game.players.length < 3){
     bot.channelMessage(messages.morePlayersRequired);
   }
   else {
