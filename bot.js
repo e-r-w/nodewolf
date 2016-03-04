@@ -5,10 +5,9 @@ const EventEmitter = require('events');
 
 class Bot extends EventEmitter {
 
-  constructor (token, channel, id){
+  constructor (token, channel){
     super();
-    this.channel = channel;
-    this.id = id; // @slackbot
+    this.channelName = channel;
     this.token = token;
     this.slack_bot = slack.rtm.client();
     this.slack_bot.message( msg => this._onMessage(msg) );
@@ -34,8 +33,14 @@ class Bot extends EventEmitter {
 
   start () {
     return new Promise( resolve => {
-      this.slack_bot.listen({token:this.token});
-      this.slack_bot.started( () => resolve() );
+      slack.channels.list({token: this.token}, (err, data) => {
+        this.channel = data.channels.filter(channel => channel.name === this.channelName)[0].id;
+        this.slack_bot.listen({token:this.token});
+        this.slack_bot.started( data => {
+          this.id = data.ims.filter( im => im.user === 'USLACKBOT' )[0].id;
+          resolve()
+        } );
+      });
     });
   }
 
@@ -43,7 +48,9 @@ class Bot extends EventEmitter {
     return new Promise( (resolve, reject) => {
       slack.users.list({token:this.token}, (err, data) => {
         if(err) reject(err);
-        else resolve(data);
+        else {
+          resolve(data);
+        }
       });
     });
   }

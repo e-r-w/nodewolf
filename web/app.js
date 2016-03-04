@@ -10,8 +10,7 @@ class App extends React.Component {
     super(props);
     this.state = {
       slackToken: cookie.load('slackToken') || '',
-      slackChannel: cookie.load('slackChannel') || '',
-      slackBot: cookie.load('slackBot') || ''
+      slackChannel: cookie.load('slackChannel') || ''
     };
     this.runGame = this.runGame.bind(this);
     this.setValue = this.setValue.bind(this);
@@ -35,24 +34,32 @@ class App extends React.Component {
       </div>
     }
     else {
-      return <div>
+      return <form onSubmit={this.runGame}>
         <h3>Enter your room details</h3>
         <div className="form-group">
           <label htmlFor="slackToken">Slack Token</label>
-          <input className="form-control" value={ this.state.slackToken } type="text" id="slackToken" onChange={ evt => this.setValue('slackToken', evt.target.value) } />
+          <input
+            className="form-control"
+            value={ this.state.slackToken }
+            type="text"
+            id="slackToken"
+            onChange={ evt => this.setValue('slackToken', evt.target.value) }
+          />
         </div>
         <div className="form-group">
           <label htmlFor="slackChannel">Slack Channel</label>
-          <input className="form-control" value={ this.state.slackChannel } type="text" id="slackChannel" onChange={ evt => this.setValue('slackChannel', evt.target.value) } />
+          <input
+            className="form-control"
+            value={ this.state.slackChannel }
+            type="text"
+            id="slackChannel"
+            onChange={ evt => this.setValue('slackChannel', evt.target.value) }
+          />
         </div>
-        <div className="form-group">
-          <label htmlFor="slackBot">Slack Bot Id</label>
-          <input className="form-control" value={ this.state.slackBot } type="text" id="slackBot" onChange={ evt => this.setValue( 'slackBot', evt.target.value ) } />
-        </div>
-        <button className="btn btn-primary" onClick={this.runGame}>
+        <button className="btn btn-primary" type="submit">
           Go!
         </button>
-      </div>
+      </form>
     }
 
   }
@@ -64,9 +71,10 @@ class App extends React.Component {
     cookie.save(name, value);
   }
 
-  runGame() {
+  runGame(evt) {
+    evt.preventDefault();
     Core
-      .run(this.state.slackToken, this.state.slackChannel, this.state.slackBot)
+      .run(this.state.slackToken, this.state.slackChannel)
       .then(
         () => this.setState({running: true, failed: false}),
         err => this.setState({running: false, failed: true})
