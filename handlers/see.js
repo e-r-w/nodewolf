@@ -12,8 +12,7 @@ module.exports = function(bot, game, msg){
       const playerId = match[0].replace('!see <@', '').replace('>', '');
       const target = game.getPlayer({user: playerId});
       if(target && !target.dead){
-        bot.userMessage(msg.user, messages.seen(target, game));
-        game.seen();
+        game.see(target.id);
       }
       else {
         bot.userMessage(msg.user, messages.invalidSee);

@@ -9,40 +9,42 @@ const string = require('string');
 
 class Game extends EventEmitter {
 
-  constructor (users){
+  constructor (){
     super();
     this.status = STATUS.IDLE;
-    this.slackUsers = users;
     this.players = [];
-  }
-
-  start (){
-
-    this.status = STATUS.IN_PROGRESS;
-    this.turn = TURN.SEER;
     this.votes = [];
     this.targets = [];
-    this.players.forEach( player => (player.dead = false) && (player.protected = false) && (player.guarded = null) && (player.tough = false) );
+  }
 
+  _assignRoles() {
     this._assignRole(ROLE.STANDARD.SEER);
     this._assignRole(ROLE.STANDARD.WEREWOLF);
 
     if(this.players.length === 5) {
-      const role = getRandomInt(2) === 1 ? ROLE.COMPLEX.LYCAN : ROLE.STANDARD.WEREWOLF; // maybe a lycan, maybe a werewolf, mwahahaha.
+      const role = getRandomInt(2) === 1 ? ROLE.COMPLEX_VILLAGER.LYCAN : ROLE.STANDARD.WEREWOLF; // maybe a lycan, maybe a werewolf, mwahahaha.
       this._assignRole(role);
     }
     else if(this.players.length > 5) {
+
       // complex fill
       let werewolfCount = Math.floor(this.players.length / 3) - 1; // 1/3rd players are werewolves?? seems OP
-      let complexCount  = Math.floor(this.players.length / 3); // 1/3rd are complex roles
+      const complexWolves = Object.keys(ROLE.COMPLEX_WOLVES);
+      while(complexWolves.length < werewolfCount) {
+        complexWolves.push(ROLE.STANDARD.WEREWOLF);
+      }
       while(werewolfCount > 1){
-        this._assignRole(ROLE.STANDARD.WEREWOLF);
+        const role = complexWolves[getRandomInt(complexWolves.length)];
+        complexWolves.splice(complexWolves.indexOf(role));
+        this._assignRole(role);
         werewolfCount--;
       }
-      const complexRoles = Object.keys(ROLE.COMPLEX);
+
+      let complexCount  = Math.floor(this.players.length / 3); // 1/3rd are villager/tanner roles
+      const complexVillagers = Object.keys(ROLE.COMPLEX_VILLAGER);
       while(complexCount > 1){
-        const role = complexRoles[getRandomInt(complexRoles.length)];
-        complexRoles.splice(complexRoles.indexOf(role));
+        const role = complexVillagers[getRandomInt(complexVillagers.length)];
+        complexVillagers.splice(complexVillagers.indexOf(role));
         this._assignRole(role);
         complexCount--;
       }
@@ -52,179 +54,215 @@ class Game extends EventEmitter {
       player.role = ROLE.STANDARD.VILLAGER;
     });
 
-    this.once('seen', () => {
-      const beholder = this.getPlayersWithRole(ROLE.COMPLEX.BEHOLDER)[0];
-      if(beholder){
-        this.emit('beholder', beholder);
-      }
-      const minion = this.getPlayersWithRole(ROLE.COMPLEX.MINION)[0];
-      if(minion){
-        this.emit('minion', minion);
-      }
-    });
-
-    this.emit('start');
-
-    this.emit('see', this._seer());
-
     return this;
   }
 
-  hunt() {
-    this.turn = TURN.WEREWOLF;
-    this.emit('hunt');
-  }
-
-  guard () {
-    this.emit('guard', this._bodyguard());
-  }
-
-  guardPlayer(player, target) {
-    if(player.guarded){
-      player.guarded.protected = false;
-    }
-    player.guarded = target;
-    target.protected = true;
-  }
-
-  see() {
+  _start() {
+    this.status = STATUS.IN_PROGRESS;
     this.turn = TURN.SEER;
-    this.emit('see', this._seer());
-  }
-
-  day () {
-    this.turn = TURN.DAY;
-    this.emit('day');
-  }
-
-  seen() {
-    const bodyguard = this._bodyguard();
-    if(bodyguard && !bodyguard.dead){
-      this.turn = TURN.BODYGUARD;
+    this.firstRun = true;
+    this.emit('start');
+    this.emit('phase:seer:start', this._seer());
+    const beholder = this._beholder();
+    if(beholder){
+      this.emit('beholder', beholder, this._seer());
     }
-    else {
-      this.turn = TURN.WEREWOLF;
-    }
-    this.emit('seen');
-  }
-
-  wanderingPlayer(){
-    const wanderers = this.players
-      .filter( player => !player.dead && [ // TODO should this include people killed in the night phase???
-        ROLE.STANDARD.SEER,
-        ROLE.STANDARD.WEREWOLF,
-        ROLE.COMPLEX.BODYGUARD,
-        ROLE.COMPLEX.WOLFMAN
-      ].some(player.role));
-    const index = getRandomInt(wanderers.length);
-    return wanderers[index];
-  }
-
-  startInsomniac(){
-    this.on('day', () => {
-      const insomniac = this._insomniac();
-      if(!insomniac.dead){
-        this.emit('insomniac', insomniac);
-      }
-    });
-  }
-
-  addPlayer (msg){
-    if(!this.players.some(usr => usr.id === msg.user)){
-      this.players = this.players.concat(
-        this.slackUsers.filter(usr => usr.id === msg.user).map( usr => ({ id: usr.id, name: usr.name }) ) // clones the object?
-      );
+    const minion = this._minion();
+    if(minion){
+      this.emit('minion', minion, this._votingWolves());
     }
     return this;
   }
 
-  playerList() {
-    return this.players
-      .map( player => player.name )
-      .join(', @');
+  start() {
+    this._assignRoles();
+    this._start();
   }
+  //
+  //hunt() {
+  //  this.turn = TURN.WEREWOLF;
+  //  this.emit('hunt');
+  //}
+  //
+  //guard () {
+  //  this.emit('guard', this._bodyguard());
+  //}
+  //
+  //guardPlayer(player, target) {
+  //  if(player.guarded){
+  //    player.guarded.protected = false;
+  //  }
+  //  player.guarded = target;
+  //  target.protected = true;
+  //}
 
-  remainingPlayers() {
-    return this.players
-      .filter( player => !player.dead )
-      .map( player => player.name )
-      .join(', @');
-  }
-
-  end (){
-    this.players = [];
-    this.votes = [];
-    this.targets = [];
-    this.status = STATUS.IDLE;
-  }
-
-  potentialRoles() {
-    if(this.players.length > 5){
-      return Object.keys(ROLE.COMPLEX).join(', ');
+  see(id) {
+    const seer = this._seer();
+    if(!seer || seer.dead){
+      return;
     }
-    else if(this.players.length === 5){
-      return ROLE.COMPLEX.LYCAN;
+    const target = this.players.filter( player => player.id === id)[0];
+    if(!target || target.dead){
+      return;
+    }
+    const side = this.seerTeam(target);
+    this.emit('phase:seer:end', seer, target, side);
+    if(this.firstRun){
+      this.firstRun = false;
+      this.turn = TURN.DAY;
+      this.emit('phase:day:start');
     }
     else {
-      return '';
+      this.next();
     }
   }
+
+  next() {
+    if(this.turn === TURN.DAY){
+      this.turn = TURN.SEER;
+      const seer = this._seer();
+      if(!seer.dead){
+        this.emit('phase:seer:start');
+      }
+    }
+    if(this.turn === TURN.SEER){
+      this.turn = TURN.WEREWOLF;
+      this.emit('phase:werewolf:start');
+    }
+  }
+  //
+  //day () {
+  //  this.turn = TURN.DAY;
+  //  this.emit('day');
+  //}
+  //
+  //seen() {
+  //  const bodyguard = this._bodyguard();
+  //  if(bodyguard && !bodyguard.dead){
+  //    this.turn = TURN.BODYGUARD;
+  //  }
+  //  else {
+  //    this.turn = TURN.WEREWOLF;
+  //  }
+  //  this.emit('seen');
+  //}
+  //
+  //wanderingPlayer(){
+  //  const wanderers = this.players
+  //    .filter( player => !player.dead && [ // TODO should this include people killed in the night phase???
+  //      ROLE.STANDARD.SEER,
+  //      ROLE.STANDARD.WEREWOLF,
+  //      ROLE.COMPLEX.BODYGUARD,
+  //      ROLE.COMPLEX.WOLFMAN
+  //    ].some(player.role));
+  //  const index = getRandomInt(wanderers.length);
+  //  return wanderers[index];
+  //}
+  //
+  //startInsomniac(){
+  //  this.on('day', () => {
+  //    const insomniac = this._insomniac();
+  //    if(!insomniac.dead){
+  //      this.emit('insomniac', insomniac);
+  //    }
+  //  });
+  //}
+
+  addPlayer (player){
+    if(!this.players.some(usr => usr.id === player.id)){
+      this.players = this.players.concat(
+        [{ id: player.id, name: player.name }] // clones the object?
+      );
+      this.emit('add:player', { id: player.id, name: player.name });
+    }
+    return this;
+  }
+
+  //playerList() {
+  //  return this.players
+  //    .map( player => player.name )
+  //    .join(', @');
+  //}
+  //
+  //remainingPlayers() {
+  //  return this.players
+  //    .filter( player => !player.dead )
+  //    .map( player => player.name )
+  //    .join(', @');
+  //}
+  //
+  //end (){
+  //  this.players = [];
+  //  this.votes = [];
+  //  this.targets = [];
+  //  this.status = STATUS.IDLE;
+  //}
+  //
+  //potentialRoles() {
+  //  if(this.players.length > 5){
+  //    return Object.keys(ROLE.COMPLEX).join(', ');
+  //  }
+  //  else if(this.players.length === 5){
+  //    return ROLE.COMPLEX.LYCAN;
+  //  }
+  //  else {
+  //    return '';
+  //  }
+  //}
 
   seerTeam(player) {
     return [
         ROLE.STANDARD.WEREWOLF,
-        ROLE.COMPLEX.LYCAN
+        ROLE.COMPLEX_VILLAGER.LYCAN
       ].indexOf(player.role) >= 0 ? 'Werewolves' : 'Villagers';
   }
 
-  getPlayer(msg){
-    return this.players.filter( player => player.id === msg.user )[0];
+  //getPlayer(msg){
+  //  return this.players.filter( player => player.id === msg.user )[0];
+  //}
+  //
+  //getPlayersWithRole(role) {
+  //  return this.players.filter( player => player.role === role );
+  //}
+
+  playerById(id) {
+    return this.players.filter( player => player.id === id)[0];
   }
 
-  getPlayersWithRole(role) {
-    return this.players.filter( player => player.role === role );
-  }
 
-  getPlayerByName(name) {
-    return this.players.filter( player => player.name === name )[0];
-  }
+  //getPlayerByName(name) {
+  //  return this.players.filter( player => player.name === name )[0];
+  //}
 
   vote(player, target) {
     this.removeVote(player);
-    const vote = this.votes.filter( vote => vote.candidate.name === target.name )[0];
+    const vote = this.votes.filter( vote => vote.target === target )[0];
     if(vote){
-      vote.voters.push(player.name);
+      vote.voters.push(player);
     }
     else {
       this.votes.push({
-        candidate: target,
-        voters: [player.name]
+        target: target,
+        voters: [player]
       });
     }
+    this.emit('vote:cast', this.votes);
+
     if(this.voteComplete()){
       const voted = this.getVoted();
-      voted.forEach( target => {
-        if(target && target.name){
-          target.dead = true;
+      voted.forEach( targetId => {
+        if(targetId !== 'noone'){
+          this.playerById(targetId).dead = true;
         }
       });
-      this.emit('ballot');
-      this.emit('voted', voted );
+      this.emit('vote:end', voted );
+      this.emit('phase:day:end');
       const winners = this.isOver();
       if(winners){
-        this.emit('won', winners);
-        this.end();
-        return winners;
+        this.emit('end', winners);
       }
       else {
-        // seer/werewolf turn
-        const seer = this._seer();
-        if(seer.dead){
-          this.hunt();
-        }
-        else {
-          this.see();
-        }
+        this.next();
       }
       this.votes = [];
     }
@@ -241,23 +279,23 @@ class Game extends EventEmitter {
 
     return this.votes
       .filter( vote => vote.voters.length === count )
-      .map ( vote => vote.candidate );
+      .map ( vote => vote.target );
 
   }
 
   removeVote(player) {
     this.votes = this.votes
       .filter( vote => {
-        return vote.voters.length !== 1 || vote.voters[0] !== player.name;
+        // filter out ones that only have one vote
+        return vote.voters.length !== 1 || vote.voters[0] !== player;
       })
       .map( vote => {
-        const index = vote.voters.indexOf(player.name);
+        const index = vote.voters.indexOf(player);
         if(index > 0){
           vote.voters = vote.voters.slice(index);
         }
         return vote;
       });
-    this.emit('ballot');
   }
 
   voteComplete() {
@@ -274,58 +312,56 @@ class Game extends EventEmitter {
       .map( vote => vote.voters )
       .reduce( (a, b) => a.concat(b), [] );
     const remaining = this.players
-      .map( player => player.name )
-      .filter( name => voted.indexOf(name) < 0 );
+      .map( player => player.id )
+      .filter( id => voted.indexOf(id) < 0 );
     return remaining.length > 0 ?
-      `@${remaining.join(', @')}` :
+      `@${remaining.map( id => this.players.filter(player => player.id === id)[0].name ).join(', @')}` :
       'None';
   }
 
   // TODO abstract into a vote manager???
-  kill(player, target) {
-    this.removeKill(player);
-    const vote = this.targets.filter( vote => vote.candidate.name === target.name )[0];
+  kill(playerId, targetId) {
+    this.removeKill(playerId);
+    const vote = this.targets.filter( vote => vote.target === targetId )[0];
     if(vote){
-      vote.voters.push(player.name);
+      vote.voters.push(playerId);
     }
     else {
       this.targets.push({
-        candidate: target,
-        voters: [player.name]
+        target: targetId,
+        voters: [playerId]
       });
     }
     if(this.killComplete()){
-      if(this.targets[0].candidate.protected || this.targets[0].candidate.tough){
-        if(this.targets[0].candidate.tough){
-          this.emit('tough', this.targets[0].candidate);
-          this.targets[0].candidate.tough = false;
-        }
-        this.emit('notKilled');
-        this.day();
+      const target = this.playerById(this.targets[0].target);
+      if(target.protected || target.tough){
+        //if(target.tough){
+        //  this.emit('tough', target);
+        //  target.tough = false;
+        //}
       }
       else {
-        this.targets[0].candidate.dead = true;
-        this.emit('killed', this.targets[0].candidate );
+        target.dead = true;
+        this.emit('killed', target );
         const winners = this.isOver();
         if(winners){
-          this.emit('won', winners);
-          this.end();
+          this.emit('end', winners);
         }
         else {
-          this.day();
+          this.next();
         }
       }
       this.targets = [];
     }
   }
 
-  removeKill(player) {
+  removeKill(playerId) {
     this.targets = this.targets
       .filter( vote => {
-        return vote.voters.length !== 1 || vote.voters[0] !== player.name;
+        return vote.voters.length !== 1 || vote.voters[0] !== playerId;
       })
       .map( vote => {
-        const index = vote.voters.indexOf(player.name);
+        const index = vote.voters.indexOf(playerId);
         if(index > 0){
           vote.voters = vote.voters.slice(index);
         }
@@ -363,14 +399,14 @@ class Game extends EventEmitter {
   }
 
   isOver() {
-    const tanner = this.players.filter( player => player.role === ROLE.COMPLEX.TANNER )[0];
+    const tanner = this.players.filter( player => player.role === ROLE.COMPLEX_VILLAGER.TANNER )[0];
     if(tanner && tanner.dead){
       return WINNER.TANNER;
     }
     const wolfRoles = [
       ROLE.STANDARD.WEREWOLF,
-      ROLE.COMPLEX.WOLFMAN,
-      ROLE.COMPLEX.MINION
+      ROLE.COMPLEX_WOLVES.WOLFMAN,
+      ROLE.COMPLEX_WOLVES.MINION
     ];
     const numWolves    = this.players.filter( player => !player.dead && wolfRoles.indexOf(player.role) >= 0 ).length;
     const numVillagers = this.players.filter( player => !player.dead && wolfRoles.indexOf(player.role) < 0).length;
@@ -390,7 +426,7 @@ class Game extends EventEmitter {
   _votingWolves() {
     const votingWolves = [
       ROLE.STANDARD.WEREWOLF,
-      ROLE.COMPLEX.WOLFMAN
+      ROLE.COMPLEX_WOLVES.WOLFMAN
     ];
     return this.players.filter( player => votingWolves.indexOf(player.role) >= 0 );
   }
@@ -399,12 +435,20 @@ class Game extends EventEmitter {
     return this.players.filter( player => player.role === ROLE.STANDARD.SEER )[0];
   }
 
+  _beholder() {
+    return this.players.filter( player => player.role === ROLE.COMPLEX_VILLAGER.BEHOLDER )[0];
+  }
+
+  _minion() {
+    return this.players.filter( player => player.role === ROLE.COMPLEX_WOLVES.MINION )[0];
+  }
+
   _insomniac() {
-    return this.players.filter( player => player.role === ROLE.COMPLEX.INSOMNIAC )[0];
+    return this.players.filter( player => player.role === ROLE.COMPLEX_VILLAGER.INSOMNIAC )[0];
   }
 
   _bodyguard() {
-    return this.players.filter( player => player.role === ROLE.COMPLEX.BODYGUARD )[0];
+    return this.players.filter( player => player.role === ROLE.COMPLEX_VILLAGER.BODYGUARD )[0];
   }
 
   _playersWithoutRole() {
@@ -422,7 +466,7 @@ class Game extends EventEmitter {
       player = playersWithoutRole[index];
     }
     player.role = role;
-    if(role === ROLE.COMPLEX.TOUGH_GUY){
+    if(role === ROLE.COMPLEX_VILLAGER.TOUGH_GUY){
       player.tough = true;
     }
   }

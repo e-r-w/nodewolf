@@ -69,90 +69,88 @@ exports.run = function(token, channel){
         });
 
         game.on('start', () => {
+
           game.players.forEach( player => {
             bot.userMessage(player.id, messages.yourRole(player));
           });
+
           const votingWolves = game._votingWolves();
           votingWolves.forEach( wolf => {
             if(votingWolves.length > 1){
-              const werewolves = votingWolves
-                .map( player => player.name)
-                .join(', @');
-              bot.userMessage(wolf.id, messages.werewolvesAre(werewolves));
+              bot.userMessage(wolf.id, messages.werewolvesAre(votingWolves));
             }
             else {
               bot.userMessage(wolf.id, messages.onlyWolf);
             }
           });
+
         });
 
-        game.on('ballot', () => {
+        game.on('vote:cast', () => {
           bot.channelMessage(messages.ballot(game));
         });
 
-        game.on('tough', toughGuy => {
-          bot.userMessage(toughGuy, messages.tough);
-        });
+        //game.on('tough', toughGuy => {
+        //  bot.userMessage(toughGuy, messages.tough);
+        //});
 
-        game.on('voted', targets => {
-          // show dead
-          bot.channelMessage(messages.lynch(
-            targets.map( target => `${target.name} (${target.role})` ).join(', @')
-          ));
-
+        game.on('vote:end', targets => {
+          if(targets.length === 1 && targets[0] === 'noone'){
+            //no one was voted for???
+          }
+          else {
+            bot.channelMessage(messages.lynch(
+              targets
+                .filter( target => target !== 'noone' )
+                .map( target => game.playerById(target) )
+                .map( target => `${target.name} (${target.role})` )
+                .join(', @')
+            ));
+          }
         });
 
         game.on('insomniac', insomniac => {
           bot.userMessage(insomniac, messages.insomniac(game));
         });
 
-        game.on('see', usr => {
+        game.on('phase:seer:start', usr => {
           bot.userMessage(usr.id, messages.see);
         });
 
-        game.once('seen', () => {
-          game.day();
-          game.startInsomniac();
-          game.on('seen', () => {
-            if(game.turn === TURN.BODYGUARD){
-              game.guard();
-            }
-            else {
-              game.hunt();
-            }
-          });
+        game.on('phase:seer:end', (seer, target, side) => {
+          bot.userMessage(seer.id, messages.seen(target.name, side));
         });
 
-        game.on('guard', bodyguard => {
-          bot.userMessage(bodyguard, messages.guard);
-        });
+        //game.on('guard', bodyguard => {
+        //  bot.userMessage(bodyguard, messages.guard);
+        //});
 
-        game.on('day', () => {
+        game.on('phase:day:start', () => {
           bot.channelMessage(messages.day(game));
         });
 
-        game.on('hunt', () => {
-          // ask the werewolves to kill someone
-          game._votingWolves().filter( wolf => !wolf.dead ).forEach( player => {
-            bot.userMessage(player, messages.hunt);
-          });
-        });
+        //game.on('hunt', () => {
+        //  // ask the werewolves to kill someone
+        //  game._votingWolves().filter( wolf => !wolf.dead ).forEach( player => {
+        //    bot.userMessage(player, messages.hunt);
+        //  });
+        //});
+        //
+        //game.on('kill', () => {
+        //  game._votingWolves().filter( wolf => !wolf.dead ).forEach( player => {
+        //    bot.userMessage(player, messages.kill(game));
+        //  });
+        //});
+        //
+        //game.on('notKilled', () => {
+        //  bot.channelMessage(messages.notKilled);
+        //});
+        //
+        //game.on('killed', player => {
+        //  bot.channelMessage(messages.killed(player));
+        //});
 
-        game.on('kill', () => {
-          game._votingWolves().filter( wolf => !wolf.dead ).forEach( player => {
-            bot.userMessage(player, messages.kill(game));
-          });
-        });
-
-        game.on('notKilled', () => {
-          bot.channelMessage(messages.notKilled);
-        });
-
-        game.on('killed', player => {
-          bot.channelMessage(messages.killed(player));
-        });
-
-        game.on('won', winners => {
+        game.on('end', winners => {
           bot.channelMessage(messages.win(game, winners));
         });
 
@@ -162,7 +160,7 @@ exports.run = function(token, channel){
         });
 
         game.on('minion', minion => {
-          const werewolves = game.getPlayersWithRole(ROLE.STANDARD.WEREWOLF)
+          const werewolves = game._votingWolves()
             .map( player => player.name)
             .join(', @');
           bot.userMessage(minion.id, messages.werewolvesAre(werewolves));

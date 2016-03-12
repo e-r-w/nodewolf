@@ -61,14 +61,14 @@ module.exports = {
   see: `
     Seer, select a player by saying !see @username.
   `,
-  seen: (player, game) => `
-    @${player.name} is on the side of the ${game.seerTeam(player)}.
+  seen: (player, side) => `
+    @${player} is on the side of the ${side}.
   `,
   seerIs: name => `
     The seer is ${name}
   `,
   werewolvesAre: werewolves => `
-    The werewolves are @${werewolves}
+    The werewolves are @${werewolves.map( player => player.name).join(', @')}
   `,
   yourRole: player => `
     Your role is ${player.role}

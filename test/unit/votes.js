@@ -14,8 +14,8 @@ describe('Voting', function(){
 
   it('should select player with the highest votes', () => {
      game.votes = [
-       { candidate: 'wolfy' , voters: ['ethan']},
-       { candidate: 'ethan' , voters: ['wolfy', 'nick']}
+       { target: 'wolfy' , voters: ['ethan']},
+       { target: 'ethan' , voters: ['wolfy', 'nick']}
      ];
 
     const voted = game.getVoted();
@@ -25,9 +25,9 @@ describe('Voting', function(){
 
   it('should select player with the highest votes again', () => {
     game.votes = [
-      { candidate: 'wolfy' , voters: ['ethan']},
-      { candidate: 'ethan' , voters: ['wolfy', 'nick', 'rory']},
-      { candidate: 'rory'  , voters: ['hailey']}
+      { target: 'wolfy' , voters: ['ethan']},
+      { target: 'ethan' , voters: ['wolfy', 'nick', 'rory']},
+      { target: 'rory'  , voters: ['hailey']}
     ];
 
     const voted = game.getVoted();
@@ -38,9 +38,9 @@ describe('Voting', function(){
   it('should select a tie', () => {
 
     game.votes = [
-      { candidate: 'wolfy' , voters: ['ethan']},
-      { candidate: 'ethan' , voters: ['wolfy', 'rory']},
-      { candidate: 'rory'  , voters: ['hailey', 'nick']}
+      { target: 'wolfy' , voters: ['ethan']},
+      { target: 'ethan' , voters: ['wolfy', 'rory']},
+      { target: 'rory'  , voters: ['hailey', 'nick']}
     ];
 
     const voted = game.getVoted();
@@ -51,11 +51,11 @@ describe('Voting', function(){
 
   it('should remove votes', () => {
     game.votes = [
-      { candidate: {name:'wolfy'} , voters: ['ethan']}
+      { target: 'wolfy', voters: ['ethan']}
     ];
 
-    game.vote({name:'ethan'}, {name: 'nick'});
-    assert.deepEqual(game.votes[0], { candidate: {name:'nick'} , voters: ['ethan']});
+    game.vote('ethan', 'nick');
+    assert.deepEqual(game.votes[0], { target: 'nick' , voters: ['ethan']});
     assert.equal(game.votes.length, 1);
   });
 
@@ -65,21 +65,21 @@ describe('Voting', function(){
       { name: 'wolfy',  id: 'abc', role: ROLE.STANDARD.SEER},
       { name: 'nick',   id: 'def', role: ROLE.STANDARD.VILLAGER},
       { name: 'rory',   id: 'ghi', role: ROLE.STANDARD.WEREWOLF},
-      { name: 'hailey', id: 'jkl', role: ROLE.COMPLEX.TANNER},
-      { name: 'nigel',  id: 'mno', role: ROLE.COMPLEX.BEHOLDER},
-      { name: 'ethan',  id: 'pqr', role: ROLE.COMPLEX.BODYGUARD}
+      { name: 'hailey', id: 'jkl', role: ROLE.COMPLEX_VILLAGER.TANNER},
+      { name: 'nigel',  id: 'mno', role: ROLE.COMPLEX_VILLAGER.BEHOLDER},
+      { name: 'ethan',  id: 'pqr', role: ROLE.COMPLEX_VILLAGER.BODYGUARD}
     ];
 
     game.votes = [
-      { candidate: game.players[3] , voters: ['ethan','wolfy','nick','hailey','nigel']}
+      { target: game.players[3].id , voters: ['ethan','wolfy','nick','hailey','nigel']}
     ];
 
-    game.on('won', winners => {
+    game.on('end', winners => {
       assert.equal(winners, WINNERS.TANNER);
       done();
     });
 
-    game.vote(game.players[2], game.players[3]);
+    game.vote(game.players[2].id, game.players[3].id);
 
   });
 
@@ -88,19 +88,19 @@ describe('Voting', function(){
       { name: 'wolfy',  id: 'abc', role: ROLE.STANDARD.SEER},
       { name: 'nick',   id: 'def', role: ROLE.STANDARD.VILLAGER},
       { name: 'rory',   id: 'ghi', role: ROLE.STANDARD.WEREWOLF},
-      { name: 'hailey', id: 'jkl', role: ROLE.COMPLEX.WEREWOLF, dead: true}
+      { name: 'hailey', id: 'jkl', role: ROLE.STANDARD.WEREWOLF, dead: true}
     ];
 
     game.votes = [
-      { candidate: game.players[2] , voters: ['wolfy','rory']}
+      { target: game.players[2].id , voters: ['wolfy','rory']}
     ];
 
-    game.on('won', winners => {
+    game.on('end', winners => {
       assert.equal(winners, WINNERS.VILLAGER);
       done();
     });
 
-    game.vote(game.players[0], game.players[2]);
+    game.vote(game.players[0].id, game.players[2].id);
 
   });
 
@@ -111,20 +111,20 @@ describe('Voting', function(){
       { name: 'nick',   id: 'def', role: ROLE.STANDARD.VILLAGER},
       { name: 'rory',   id: 'ghi', role: ROLE.STANDARD.WEREWOLF},
       { name: 'hailey', id: 'jkl', role: ROLE.STANDARD.WEREWOLF},
-      { name: 'nigel',  id: 'mno', role: ROLE.COMPLEX.BEHOLDER},
-      { name: 'ethan',  id: 'pqr', role: ROLE.COMPLEX.BODYGUARD}
+      { name: 'nigel',  id: 'mno', role: ROLE.COMPLEX_VILLAGER.BEHOLDER},
+      { name: 'ethan',  id: 'pqr', role: ROLE.COMPLEX_VILLAGER.BODYGUARD}
     ];
 
     game.votes = [
-      { candidate: game.players[1] , voters: ['rory','nick','hailey','nigel']}
+      { target: game.players[1].id , voters: ['rory','nick','hailey','nigel']}
     ];
 
-    game.on('won', winners => {
+    game.on('end', winners => {
       assert.equal(winners, WINNERS.WEREWOLF);
       done();
     });
 
-    game.vote(game.players[5], game.players[1]);
+    game.vote(game.players[5].id, game.players[1].id);
 
   });
 

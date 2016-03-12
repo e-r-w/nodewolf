@@ -17,9 +17,9 @@ describe('Game completion', function(){
        { name: 'wolfy',  id: 'abc', role: ROLE.STANDARD.SEER},
        { name: 'nick',   id: 'def', role: ROLE.STANDARD.VILLAGER},
        { name: 'rory',   id: 'ghi', role: ROLE.STANDARD.WEREWOLF},
-       { name: 'hailey', id: 'jkl', role: ROLE.COMPLEX.TANNER, dead: true},
-       { name: 'nigel',  id: 'mno', role: ROLE.COMPLEX.BEHOLDER},
-       { name: 'ethan',  id: 'pqr', role: ROLE.COMPLEX.BODYGUARD}
+       { name: 'hailey', id: 'jkl', role: ROLE.COMPLEX_VILLAGER.TANNER, dead: true},
+       { name: 'nigel',  id: 'mno', role: ROLE.COMPLEX_VILLAGER.BEHOLDER},
+       { name: 'ethan',  id: 'pqr', role: ROLE.COMPLEX_VILLAGER.BODYGUARD}
      ];
 
     const winners = game.isOver();
