@@ -208,13 +208,15 @@ class Game extends EventEmitter {
           target.dead = true;
         }
       });
+      this.emit('ballot');
+      this.emit('voted', voted );
       const winners = this.isOver();
       if(winners){
         this.emit('won', winners);
         this.end();
+        return winners;
       }
       else {
-        this.emit('voted', voted );
         // seer/werewolf turn
         const seer = this._seer();
         if(seer.dead){
@@ -255,6 +257,7 @@ class Game extends EventEmitter {
         }
         return vote;
       });
+    this.emit('ballot');
   }
 
   voteComplete() {
@@ -356,7 +359,7 @@ class Game extends EventEmitter {
   }
 
   displayRoleSummary() {
-    return this.targets.map( vote => `:knife: Kill @${string(vote.candidate.name).padRight(20).s} | (${vote.voters.length}) | @${vote.voters.join(', @')}`).join('\n    ');
+    return this.players.map( player => `@${player.name} - ${player.dead ? ':x:' : ':white_check_mark:'}`).join('\n    ');
   }
 
   isOver() {

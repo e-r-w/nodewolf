@@ -15,7 +15,7 @@ class Bot extends EventEmitter {
 
   channelMessage (msg){
     return new Promise((resolve, reject) => {
-      slack.chat.postMessage({token:this.token, channel: this.channel, text: msg}, (err, data) => {
+      slack.chat.postMessage({token:this.token, channel: this.channel, text: msg, as_user:true, username: 'Moderator'}, (err, data) => {
         if (err) reject(err);
         else resolve(data);
       });
@@ -24,7 +24,7 @@ class Bot extends EventEmitter {
 
   userMessage (usr, msg) {
     return new Promise((resolve, reject) => {
-      slack.chat.postMessage({token:this.token, channel: usr, text: msg}, (err, data) => {
+      slack.chat.postMessage({token:this.token, channel: usr, text: msg, as_user:true, username: 'Moderator'}, (err, data) => {
         if (err) reject(err);
         else resolve(data);
       });
@@ -32,14 +32,19 @@ class Bot extends EventEmitter {
   }
 
   start () {
-    return new Promise( resolve => {
+    return new Promise( (resolve, reject) => {
       slack.channels.list({token: this.token}, (err, data) => {
-        this.channel = data.channels.filter(channel => channel.name === this.channelName)[0].id;
-        this.slack_bot.listen({token:this.token});
-        this.slack_bot.started( data => {
-          this.id = data.ims.filter( im => im.user === 'USLACKBOT' )[0].id;
-          resolve()
-        } );
+        if(err){
+          reject(err);
+        }
+        else {
+          this.channel = data.channels.filter(channel => channel.name === this.channelName)[0].id;
+          this.slack_bot.listen({token:this.token});
+          this.slack_bot.started( data => {
+            this.id = data.self.id;
+            resolve()
+          });
+        }
       });
     });
   }

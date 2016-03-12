@@ -17,6 +17,7 @@ module.exports = {
     |_ Tough Guy - A villager who can survive a single werewolf attack.
     |_ Insomniac - A villager who is notified every night of a player who has wandered around that night.
     |_ Pacifist - A villager who cannot vote to lynch anybody.
+
     Available Commands
     ------------------------
     |_  !new - Create a new lobby for players to !join for the next game
@@ -102,6 +103,8 @@ module.exports = {
     --------------------------------------------------------------
   `,
   win: (game, team) => `
+  :clipboard: Role Summary
+  --------------------------------------------------------------
 
     ${game.displayRoleSummary()}
 

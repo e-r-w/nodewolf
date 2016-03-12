@@ -86,6 +86,10 @@ exports.run = function(token, channel){
           });
         });
 
+        game.on('ballot', () => {
+          bot.channelMessage(messages.ballot(game));
+        });
+
         game.on('tough', toughGuy => {
           bot.userMessage(toughGuy, messages.tough);
         });

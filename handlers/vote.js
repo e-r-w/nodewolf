@@ -12,7 +12,6 @@ module.exports = function(bot, game, msg){
         const target = game.getPlayer({user: playerId});
         if (target && !target.dead) {
           game.vote(player, target);
-          bot.channelMessage(messages.ballot(game));
         }
       }
       else {
@@ -20,11 +19,9 @@ module.exports = function(bot, game, msg){
         const clear = msg.text.match(/^!vote\s(clear)/gi);
         if(clear && clear.length){
           game.removeVote(player);
-          bot.channelMessage(messages.ballot(game));
         }
         else if(noOne && noOne.length){
           game.vote(player, {name: 'noone'});
-          bot.channelMessage(messages.ballot(game));
         }
       }
     }
