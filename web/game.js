@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as Core from '../core';
 import * as cookie from 'react-cookie';
+import * as messages from '../res/messages';
 
 
 class Game extends React.Component {
@@ -22,45 +23,36 @@ class Game extends React.Component {
       this.setState({ messages: this.state.messages.concat([`${toughGuy.name} survived an attack!`])});
     });
 
-    //game.on('vote:end', targets => {
-    //  if(targets.length === 1 && targets[0] === 'noone'){
-    //    bot.channelMessage(messages.noLynch);
-    //  }
-    //  else {
-    //    bot.channelMessage(messages.lynch(
-    //      targets
-    //        .filter( target => target !== 'noone' )
-    //        .map( target => game.playerById(target) )
-    //        .map( target => `${target.name} (${target.role})` )
-    //        .join(', @')
-    //    ));
-    //  }
-    //});
-    //
-    //game.on('insomniac', (insomniac, player) => {
-    //  bot.userMessage(insomniac, messages.insomniac(player));
-    //});
-    //
-    //game.on('count', (count, werewolfCount) => {
-    //  bot.userMessage(count, messages.count(werewolfCount));
-    //});
-    //
-    //game.on('phase:seer:start', usr => {
-    //  bot.userMessage(usr.id, messages.see);
-    //});
-    //
-    //game.on('phase:seer:end', (seer, target, side) => {
-    //  bot.userMessage(seer.id, messages.seen(target.name, side));
-    //});
-    //
-    //game.on('phase:guard:start', bodyguard => {
-    //  bot.userMessage(bodyguard, messages.guard);
-    //});
-    //
-    //game.on('phase:guard:end', (bodyguard, guarded) => {
-    //  bot.userMessage(bodyguard, messages.guarded(guarded));
-    //});
-    //
+    game.on('vote:end', targets => {
+      if(targets.length === 1 && targets[0] === 'noone'){
+        this.setState({ messages: this.state.messages.concat([messages.noLynch])});
+      }
+      else {
+        this.setState({ messages: this.state.messages.concat([
+          messages.lynch(
+            targets
+              .filter( target => target !== 'noone' )
+              .map( target => game.playerById(target) )
+              .map( target => `${target.name} (${target.role})` )
+              .join(', @')
+          )
+        ])});
+      }
+    });
+
+    game.on('phase:seer:end', (seer, target, side) => {
+      this.setState({ messages: this.state.messages.concat([
+        messages.seen(target.name, side)
+      ])});
+    });
+
+
+    game.on('phase:guard:end', (bodyguard, guarded) => {
+      this.setState({ messages: this.state.messages.concat([
+        messages.guarded(guarded)
+      ])});
+    });
+
     //game.on('phase:day:start', () => {
     //  bot.channelMessage(messages.day(game));
     //});
@@ -112,8 +104,7 @@ class Game extends React.Component {
           <div>
             {message}
           </div>
-        ))
-        }
+        ))}
       </div>
     );
   }
