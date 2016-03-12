@@ -71,6 +71,10 @@ class Game extends EventEmitter {
     if(minion){
       this.emit('minion', minion, this._votingWolves());
     }
+    const count = this._count();
+    if(count){
+      this.emit('count', count, this._votingWolves().length);
+    }
     return this;
   }
 
@@ -78,23 +82,21 @@ class Game extends EventEmitter {
     this._assignRoles();
     this._start();
   }
-  //
-  //hunt() {
-  //  this.turn = TURN.WEREWOLF;
-  //  this.emit('hunt');
-  //}
-  //
-  //guard () {
-  //  this.emit('guard', this._bodyguard());
-  //}
-  //
-  //guardPlayer(player, target) {
-  //  if(player.guarded){
-  //    player.guarded.protected = false;
-  //  }
-  //  player.guarded = target;
-  //  target.protected = true;
-  //}
+
+  end() {
+    this.status = STATUS.IDLE;
+    this.players = [];
+    this.votes = [];
+    this.targets = [];
+  }
+
+  guardPlayer(target) {
+    if(this.guarded){
+      this.guarded.protected = false;
+    }
+    this.guarded = target;
+    target.protected = true;
+  }
 
   see(id) {
     const seer = this._seer();
@@ -109,12 +111,9 @@ class Game extends EventEmitter {
     this.emit('phase:seer:end', seer, target, side);
     if(this.firstRun){
       this.firstRun = false;
-      this.turn = TURN.DAY;
-      this.emit('phase:day:start');
+      this.turn = TURN.WEREWOLF;
     }
-    else {
-      this.next();
-    }
+    this.next();
   }
 
   next() {
@@ -128,45 +127,29 @@ class Game extends EventEmitter {
     if(this.turn === TURN.SEER){
       this.turn = TURN.WEREWOLF;
       this.emit('phase:werewolf:start');
+      return;
+    }
+    if(this.turn === TURN.WEREWOLF){
+      this.turn = TURN.DAY;
+      const insomniac = this._insomniac();
+      if(insomniac){
+        this.emit('insomniac', insomniac, this.wanderingPlayer());
+      }
+      this.emit('phase:day:start');
     }
   }
-  //
-  //day () {
-  //  this.turn = TURN.DAY;
-  //  this.emit('day');
-  //}
-  //
-  //seen() {
-  //  const bodyguard = this._bodyguard();
-  //  if(bodyguard && !bodyguard.dead){
-  //    this.turn = TURN.BODYGUARD;
-  //  }
-  //  else {
-  //    this.turn = TURN.WEREWOLF;
-  //  }
-  //  this.emit('seen');
-  //}
-  //
-  //wanderingPlayer(){
-  //  const wanderers = this.players
-  //    .filter( player => !player.dead && [ // TODO should this include people killed in the night phase???
-  //      ROLE.STANDARD.SEER,
-  //      ROLE.STANDARD.WEREWOLF,
-  //      ROLE.COMPLEX.BODYGUARD,
-  //      ROLE.COMPLEX.WOLFMAN
-  //    ].some(player.role));
-  //  const index = getRandomInt(wanderers.length);
-  //  return wanderers[index];
-  //}
-  //
-  //startInsomniac(){
-  //  this.on('day', () => {
-  //    const insomniac = this._insomniac();
-  //    if(!insomniac.dead){
-  //      this.emit('insomniac', insomniac);
-  //    }
-  //  });
-  //}
+
+  wanderingPlayer(){
+    const wanderers = this.players
+      .filter( player => !player.dead && [ // TODO should this include people killed in the night phase???
+        ROLE.STANDARD.SEER,
+        ROLE.STANDARD.WEREWOLF,
+        ROLE.COMPLEX_VILLAGER.BODYGUARD,
+        ROLE.COMPLEX_WOLVES.WOLFMAN
+      ].some( role => player.role === role));
+    const index = getRandomInt(wanderers.length);
+    return wanderers[index];
+  }
 
   addPlayer (player){
     if(!this.players.some(usr => usr.id === player.id)){
@@ -178,37 +161,17 @@ class Game extends EventEmitter {
     return this;
   }
 
-  //playerList() {
-  //  return this.players
-  //    .map( player => player.name )
-  //    .join(', @');
-  //}
-  //
-  //remainingPlayers() {
-  //  return this.players
-  //    .filter( player => !player.dead )
-  //    .map( player => player.name )
-  //    .join(', @');
-  //}
-  //
-  //end (){
-  //  this.players = [];
-  //  this.votes = [];
-  //  this.targets = [];
-  //  this.status = STATUS.IDLE;
-  //}
-  //
-  //potentialRoles() {
-  //  if(this.players.length > 5){
-  //    return Object.keys(ROLE.COMPLEX).join(', ');
-  //  }
-  //  else if(this.players.length === 5){
-  //    return ROLE.COMPLEX.LYCAN;
-  //  }
-  //  else {
-  //    return '';
-  //  }
-  //}
+  potentialRoles() {
+    if(this.players.length > 5){
+      return Object.keys(ROLE.COMPLEX_VILLAGER).concat(Object.keys(ROLE.COMPLEX_WOLVES)).join(', ');
+    }
+    else if(this.players.length === 5){
+      return ROLE.COMPLEX.LYCAN;
+    }
+    else {
+      return '';
+    }
+  }
 
   seerTeam(player) {
     return [
@@ -217,22 +180,21 @@ class Game extends EventEmitter {
       ].indexOf(player.role) >= 0 ? 'Werewolves' : 'Villagers';
   }
 
-  //getPlayer(msg){
-  //  return this.players.filter( player => player.id === msg.user )[0];
-  //}
-  //
-  //getPlayersWithRole(role) {
-  //  return this.players.filter( player => player.role === role );
-  //}
+  getPlayer(msg){
+    return this.players.filter( player => player.id === msg.user )[0];
+  }
+
+  getPlayersWithRole(role) {
+    return this.players.filter( player => player.role === role );
+  }
 
   playerById(id) {
     return this.players.filter( player => player.id === id)[0];
   }
 
-
-  //getPlayerByName(name) {
-  //  return this.players.filter( player => player.name === name )[0];
-  //}
+  getPlayerByName(name) {
+    return this.players.filter( player => player.name === name )[0];
+  }
 
   vote(player, target) {
     this.removeVote(player);
@@ -246,7 +208,7 @@ class Game extends EventEmitter {
         voters: [player]
       });
     }
-    this.emit('vote:cast', this.votes);
+    this.emit('vote:cast', this.playerById(player), this.playerById(target), this.votes);
 
     if(this.voteComplete()){
       const voted = this.getVoted();
@@ -332,17 +294,19 @@ class Game extends EventEmitter {
         voters: [playerId]
       });
     }
+    this.emit('kill:cast');
     if(this.killComplete()){
       const target = this.playerById(this.targets[0].target);
       if(target.protected || target.tough){
-        //if(target.tough){
-        //  this.emit('tough', target);
-        //  target.tough = false;
-        //}
+        if(target.tough){
+          this.emit('tough', target);
+          target.tough = false;
+        }
+        this.emit('kill:end');
       }
       else {
         target.dead = true;
-        this.emit('killed', target );
+        this.emit('kill:end', target );
         const winners = this.isOver();
         if(winners){
           this.emit('end', winners);
@@ -383,15 +347,15 @@ class Game extends EventEmitter {
       .map( vote => vote.voters )
       .reduce( (a, b) => a.concat(b), [] );
     const remaining = this._votingWolves()
-      .map( player => player.name )
+      .map( player => player.id )
       .filter( name => voted.indexOf(name) < 0 );
     return remaining.length > 0 ?
-      `@${remaining.join(', @')}` :
+      `@${remaining.map( id => this.players.filter(player => player.id === id)[0].name ).join(', @')}` :
       'None';
   }
 
   displayVotes() {
-    return this.votes.map( vote => `:knife: Kill @${string(vote.candidate.name).padRight(20).s} | (${vote.voters.length}) | @${vote.voters.join(', @')}`).join('\n    ');
+    return this.votes.map( vote => `:knife: Kill @${string(this.playerById(vote.target).name).padRight(20).s} | (${vote.voters.length}) | @${vote.voters.join(', @')}`).join('\n    ');
   }
 
   displayRoleSummary() {
@@ -420,7 +384,7 @@ class Game extends EventEmitter {
   }
 
   prey() {
-    return this.targets.map( vote => `:knife: Kill @${string(vote.candidate.name).padRight(20).s} | (${vote.voters.length}) | @${vote.voters.join(', @')}`).join('\n    ');
+    return this.targets.map( vote => `:knife: Kill @${string(this.playerById(vote.target).name).padRight(20).s} | (${vote.voters.length}) | @${vote.voters.map(id => this.playerById(id).name).join(', @')}`).join('\n    ');
   }
 
   _votingWolves() {
@@ -449,6 +413,10 @@ class Game extends EventEmitter {
 
   _bodyguard() {
     return this.players.filter( player => player.role === ROLE.COMPLEX_VILLAGER.BODYGUARD )[0];
+  }
+
+  _count() {
+    return this.players.filter( player => player.role === ROLE.COMPLEX_VILLAGER.COUNT )[0];
   }
 
   _playersWithoutRole() {

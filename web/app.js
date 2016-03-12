@@ -2,6 +2,7 @@ import * as React from 'react';
 import {render} from 'react-dom';
 import * as Core from '../core';
 import * as cookie from 'react-cookie';
+import * as Game from './game';
 
 
 class App extends React.Component {
@@ -18,10 +19,12 @@ class App extends React.Component {
 
   render() {
 
-    if(this.state && this.state.running){
-      return <div>
-        <h3>Nodewolf is running. Refresh the page to restart</h3>
-      </div>
+    if(this.state && this.state.running && this.state.game){
+      return (
+        <div>
+          <Game game={this.state.game}/>
+        </div>
+      );
     }
     else if(this.state && this.state.failed){
       return <div>
@@ -75,10 +78,8 @@ class App extends React.Component {
     evt.preventDefault();
     Core
       .run(this.state.slackToken, this.state.slackChannel)
-      .then(
-        () => this.setState({running: true, failed: false}),
-        err => this.setState({running: false, failed: true})
-      );
+      .then( res => this.setState({running: true, failed: false, game: res[1]}) )
+      .catch( err => this.setState({running: false, failed: true}));
   }
 
 }

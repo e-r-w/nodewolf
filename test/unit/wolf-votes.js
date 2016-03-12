@@ -15,48 +15,48 @@ describe('Wolf voting', function(){
   it('should declare the tanner winner if werewolves kill tanner', done => {
 
     game.players = [
-      { name: 'wolfy',  id: 'abc', role: ROLE.STANDARD.SEER},
-      { name: 'nick',   id: 'def', role: ROLE.STANDARD.VILLAGER},
-      { name: 'rory',   id: 'ghi', role: ROLE.STANDARD.WEREWOLF},
-      { name: 'hailey', id: 'jkl', role: ROLE.STANDARD.WEREWOLF},
-      { name: 'nigel',  id: 'mno', role: ROLE.COMPLEX.TANNER},
-      { name: 'ethan',  id: 'pqr', role: ROLE.COMPLEX.BODYGUARD}
+      { name: 'wolfy',  id: 'wolfy', role: ROLE.STANDARD.SEER},
+      { name: 'nick',   id: 'nick', role: ROLE.STANDARD.VILLAGER},
+      { name: 'rory',   id: 'rory', role: ROLE.STANDARD.WEREWOLF},
+      { name: 'hailey', id: 'hailey', role: ROLE.STANDARD.WEREWOLF},
+      { name: 'nigel',  id: 'nigel', role: ROLE.COMPLEX_VILLAGER.TANNER},
+      { name: 'ethan',  id: 'ethan', role: ROLE.COMPLEX_VILLAGER.BODYGUARD}
     ];
 
     game.targets = [
-      { candidate: game.players[4] , voters: ['rory']}
+      { target: game.players[4].id , voters: ['rory']}
     ];
 
-    game.on('won', winners => {
+    game.on('end', winners => {
       assert.equal(winners, WINNERS.TANNER);
       done();
     });
 
-    game.kill(game.players[3], game.players[4]);
+    game.kill(game.players[3].id, game.players[4].id);
 
   });
 
   it('should declare the werewolves winner if werewolves outnumber villagers', done => {
 
     game.players = [
-      { name: 'wolfy',  id: 'abc', role: ROLE.STANDARD.SEER, dead: true},
-      { name: 'nick',   id: 'def', role: ROLE.STANDARD.VILLAGER},
-      { name: 'rory',   id: 'ghi', role: ROLE.STANDARD.WEREWOLF},
-      { name: 'hailey', id: 'jkl', role: ROLE.STANDARD.WEREWOLF},
-      { name: 'nigel',  id: 'mno', role: ROLE.COMPLEX.BEHOLDER},
-      { name: 'ethan',  id: 'pqr', role: ROLE.COMPLEX.BODYGUARD}
+      { name: 'wolfy',  id: 'wolfy', role: ROLE.STANDARD.SEER, dead: true},
+      { name: 'nick',   id: 'nick', role: ROLE.STANDARD.VILLAGER},
+      { name: 'rory',   id: 'rory', role: ROLE.STANDARD.WEREWOLF},
+      { name: 'hailey', id: 'hailey', role: ROLE.STANDARD.WEREWOLF},
+      { name: 'nigel',  id: 'nigel', role: ROLE.COMPLEX_VILLAGER.BEHOLDER},
+      { name: 'ethan',  id: 'ethan', role: ROLE.COMPLEX_VILLAGER.BODYGUARD}
     ];
 
     game.targets = [
-      { candidate: game.players[4] , voters: ['rory']}
+      { target: game.players[4].id , voters: ['rory']}
     ];
 
-    game.on('won', winners => {
+    game.on('end', winners => {
       assert.equal(winners, WINNERS.WEREWOLF);
       done();
     });
 
-    game.kill(game.players[3], game.players[4]);
+    game.kill(game.players[3].id, game.players[4].id);
 
   });
 

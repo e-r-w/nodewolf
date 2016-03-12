@@ -7,7 +7,8 @@ module.exports = function(bot, game, msg){
   if(game.status === STATUS.IN_LOBBY){
     const players = game
       .addPlayer(msg)
-      .playerList();
+      .map( player => player.name )
+      .join(', @');
     bot.channelMessage(`Current lobby: @${players}`);
   }
   else if(game.status === STATUS.IN_PROGRESS){

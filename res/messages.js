@@ -43,7 +43,7 @@ module.exports = {
   gameStart: game => `
     A new game of Werewolf is starting! For a tutorial, type !help.
 
-    Players: @${game.playerList()}
+    Players: @${game.players.map( player => player.name ).join(', @')}
 
     Roles: [Seer, Villager, Werewolf], Potential Roles: [${game.potentialRoles()}]
 
@@ -75,7 +75,12 @@ module.exports = {
   `,
   day: game => `
     :sunrise: The sun rises and the villagers awake.
-    Remaining Players: @${game.remainingPlayers()}
+    Remaining Players: @${
+      game.players
+        .filter( player => !player.dead )
+        .map( player => player.name )
+        .join(', @')
+    }
 
     Villagers, find the Werewolves! Type !vote @username to vote to lynch a player.
     You may change your vote at any time before voting closes. Type !vote clear to remove your vote.
@@ -113,6 +118,9 @@ module.exports = {
   lynch: players => `
     :newspaper: With pitchforks in hand, the townsfolk killed: @${players}
   `,
+  noLynch: `
+    The townsfolk have elected to lynch no-one!
+  `,
   hunt: `
     :crescent_moon: It is night and it is time to hunt. Type !kill @player to make your choice.
   `,
@@ -137,11 +145,17 @@ module.exports = {
   guard: `
     Select a player to guard with !guard @player
   `,
+  guarded: player =>  `
+    @${player} will be protected from a werewolf attack tonight
+  `,
   tough: `
     You have survived an attack by werewolves! next time you won't be so lucky...
   `,
-  insomniac: game => `
-    @${game.wanderingPlayer().name} was wandering around last night...
+  count: number => `
+    There are ${number} of werewolves in this game
+  `,
+  insomniac: player => `
+    @${player} was wandering around last night...
   `
 }
 ;

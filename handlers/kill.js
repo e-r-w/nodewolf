@@ -13,14 +13,14 @@ module.exports = function(bot, game, msg){
         const playerId = match[0].replace('!kill <@', '').replace('>', '');
         const target = game.getPlayer({user: playerId});
         if (target && !target.dead && !game._votingWolves().some(wolf => wolf.id === target.id)) {
-          game.kill(player, target);
+          game.kill(player.id, target.id);
           game._votingWolves().forEach( wolf => {
             bot.channelMessage(wolf, messages.kill(game));
           });
         }
       }
       else if(clear && clear.length){
-        game.removeKill(player);
+        game.removeKill(player.id);
         game._votingWolves().forEach( wolf => {
           bot.channelMessage(wolf, messages.kill(game));
         });

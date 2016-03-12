@@ -42,7 +42,10 @@ class Bot extends EventEmitter {
           this.slack_bot.listen({token:this.token});
           this.slack_bot.started( data => {
             this.id = data.self.id;
-            resolve()
+            this.getUsers().then( data => {
+              this.members = data.members;
+              resolve();
+            })
           });
         }
       });

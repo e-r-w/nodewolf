@@ -264,7 +264,7 @@ describe('Full game', function(){
         });
       }),
       new Promise( resolve => {
-        game.once('killed', player => {
+        game.once('kill:end', player => {
           assert.equal(player.id, 'def', 'Expected nick to be killed by werewolves');
           resolve();
         });
@@ -480,5 +480,50 @@ describe('Full game', function(){
 
   });
 
+  it('insomniac', done => {
+
+    game.addPlayer({ name: 'wolfy',  id: 'wolfy'});
+    game.addPlayer({ name: 'nick',   id: 'nick'});
+    game.addPlayer({ name: 'rory',   id: 'rory'});
+    game.addPlayer({ name: 'josh',   id: 'josh'});
+    game.addPlayer({ name: 'ethan',  id: 'ethan'});
+    game.addPlayer({ name: 'nigel',  id: 'nigel'});
+
+    // assign roles manually
+    game.players[0].role = ROLE.COMPLEX_VILLAGER.INSOMNIAC; // wolfy is insomniac
+    game.players[1].role = ROLE.STANDARD.SEER; // nick is seer
+    game.players[2].role = ROLE.COMPLEX_WOLVES.WOLFMAN; // rory is the ww
+    game.players[3].role = ROLE.COMPLEX_WOLVES.MINION; // josh is beholder
+    game.players[4].role = ROLE.STANDARD.VILLAGER; // rest are villager
+    game.players[5].role = ROLE.STANDARD.VILLAGER; // rest are villager
+
+    Promise.all([
+      new Promise( resolve => {
+        game.once('insomniac', (insomniac, wanderer) => {
+          assert.equal(wanderer.name, 'rory');
+          resolve();
+        });
+      }),
+      new Promise( resolve => {
+        game.once('phase:werewolf:start', () => {
+          resolve();
+        });
+      })
+    ]).then( () => done() );
+
+    game._start();
+
+    game.see('abc'); // nick sees a villager
+
+    game.vote('wolfy', 'nick');
+    game.vote('nigel', 'nick');
+    game.vote('nick', 'nick');
+    game.vote('rory', 'nick');
+    game.vote('ethan', 'nick');
+    game.vote('josh', 'nick');
+
+    game.kill('rory', 'nick');
+
+  });
 
 });
