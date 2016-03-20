@@ -67,8 +67,10 @@ module.exports = {
   seerIs: name => `
     The seer is ${name}
   `,
-  werewolvesAre: werewolves => `
+  werewolvesAre: werewolves => werewolves.length > 1 ? `
     The werewolves are @${werewolves.map( player => player.name).join(', @')}
+  ` : `
+    You are the only Werewolf
   `,
   yourRole: player => `
     Your role is ${player.role}
@@ -135,9 +137,6 @@ module.exports = {
   `,
   killed: player => `
     :skull_and_crossbones: @${player.name} (${player.role}) was killed during the night.
-  `,
-  onlyWolf: `
-    You are the only Werewolf
   `,
   notKilled: `
     :skull_and_crossbones: no-one was killed during the night.

@@ -3,8 +3,6 @@
 const parseCommands = require('./command-parser').parse;
 const commands      = require('./res/commands');
 const messages      = require('./res/messages');
-const ROLE          = require('./res/roles');
-const TURN          = require('./res/turn');
 const Game          = require('./game');
 const help          = require('./handlers/help');
 const newGame       = require('./handlers/new');
@@ -16,14 +14,13 @@ const alive         = require('./handlers/alive');
 const dead          = require('./handlers/dead');
 const vote          = require('./handlers/vote');
 const kill          = require('./handlers/kill');
+const Bot           = require('./bot');
 
-exports.run = function(token, channel){
+exports.run = function(token, channel) {
 
-  const Bot = require('./bot');
-  const bot = new Bot(token, channel);
+  return new Promise( (resolve, reject) => {
 
-  return new Promise( resolve => {
-
+    const bot  = new Bot(token, channel);
     const game = new Game();
 
     bot.on('message', msg => {
@@ -71,12 +68,7 @@ exports.run = function(token, channel){
       });
       const votingWolves = game._votingWolves();
       votingWolves.forEach( wolf => {
-        if(votingWolves.length > 1){
-          bot.userMessage(wolf.id, messages.werewolvesAre(votingWolves));
-        }
-        else {
-          bot.userMessage(wolf.id, messages.onlyWolf);
-        }
+        bot.userMessage(wolf.id, messages.werewolvesAre(votingWolves));
       });
     });
 
@@ -133,15 +125,17 @@ exports.run = function(token, channel){
 
     game.on('phase:werewolf:start', () => {
       // ask the werewolves to kill someone
-      game._votingWolves().filter( wolf => !wolf.dead ).forEach( player => {
-        bot.userMessage(player, messages.hunt);
-      });
+      game
+        ._votingWolves()
+        .filter( wolf => !wolf.dead )
+        .forEach( player => bot.userMessage(player, messages.hunt) );
     });
     //
     game.on('kill:cast', () => {
-      game._votingWolves().filter( wolf => !wolf.dead ).forEach( player => {
-        bot.userMessage(player, messages.kill(game));
-      });
+      game
+        ._votingWolves()
+        .filter( wolf => !wolf.dead )
+        .forEach( player => bot.userMessage(player, messages.kill(game)) );
     });
 
     game.on('kill:end', player => {
@@ -162,13 +156,17 @@ exports.run = function(token, channel){
     });
 
     game.on('minion', (minion, wolves) => {
-      const werewolves = wolves
-        .map( player => player.name)
-        .join(', @');
-      bot.userMessage(minion.id, messages.werewolvesAre(werewolves));
+      bot.userMessage(minion.id, messages.werewolvesAre(
+        wolves
+          .map( player => player.name )
+          .join(', @')
+      ));
     });
 
-    bot.start().then( () => resolve(game) )
+    bot
+      .start()
+      .then( () => resolve(game) )
+      .catch( err => reject(err) );
 
   });
 

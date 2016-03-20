@@ -78,7 +78,7 @@ class App extends React.Component {
     evt.preventDefault();
     Core
       .run(this.state.slackToken, this.state.slackChannel)
-      .then( res => this.setState({running: true, failed: false, game: res[1]}) )
+      .then( game => this.setState({running: true, failed: false, game: game}) )
       .catch( err => this.setState({running: false, failed: true}));
   }
 
