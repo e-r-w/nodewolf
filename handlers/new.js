@@ -6,7 +6,11 @@ module.exports = function(bot, game, msg){
   if(game.status === STATUS.IDLE){
     game.addPlayer(msg);
     bot.channelMessage(messages.newGame);
-    bot.channelMessage(`Current lobby: @${game.playerList()}`);
+    const players = game
+      .addPlayer(msg)
+      .map( player => player.name )
+      .join(', @');
+    bot.channelMessage(`Current lobby: @${players}`);
     game.status = STATUS.IN_LOBBY;
   }
   else {

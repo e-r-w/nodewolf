@@ -7,51 +7,53 @@ import * as messages from '../res/messages';
 export default class GameElement extends React.Component {
 
   constructor(props){
+
     super(props);
     this.state = {messages:[]};
     const game = props.game;
 
-    game.on('start', () => {
-      this.setState({ messages: this.state.messages.concat(['The game has started!'])})
-    });
+    game
 
-    game.on('vote:cast', (player, target) => {
-      this.setState({ messages: this.state.messages.concat([`${player.name} has voted for ${target.name}`])});
-    });
+      .on('start', () => {
+        this.setState({ messages: this.state.messages.concat(['The game has started!'])})
+      })
 
-    game.on('tough', toughGuy => {
-      this.setState({ messages: this.state.messages.concat([`${toughGuy.name} survived an attack!`])});
-    });
+      .on('vote:cast', (player, target) => {
+        this.setState({ messages: this.state.messages.concat([`${player.name} has voted for ${target.name}`])});
+      })
 
-    game.on('vote:end', targets => {
-      if(targets.length === 1 && targets[0] === 'noone'){
-        this.setState({ messages: this.state.messages.concat([messages.noLynch])});
-      }
-      else {
+      .on('tough', toughGuy => {
+        this.setState({ messages: this.state.messages.concat([`${toughGuy.name} survived an attack!`])});
+      })
+
+      .on('vote:end', targets => {
+        if(targets.length === 1 && targets[0] === 'noone'){
+          this.setState({ messages: this.state.messages.concat([messages.noLynch])});
+        }
+        else {
+          this.setState({ messages: this.state.messages.concat([
+            messages.lynch(
+              targets
+                .filter( target => target !== 'noone' )
+                .map( target => game.playerById(target) )
+                .map( target => `${target.name} (${target.role})` )
+                .join(', @')
+            )
+          ])});
+        }
+      })
+
+      .on('phase:seer:end', (seer, target, side) => {
         this.setState({ messages: this.state.messages.concat([
-          messages.lynch(
-            targets
-              .filter( target => target !== 'noone' )
-              .map( target => game.playerById(target) )
-              .map( target => `${target.name} (${target.role})` )
-              .join(', @')
-          )
+          messages.seen(target.name, side)
         ])});
-      }
-    });
+      })
 
-    game.on('phase:seer:end', (seer, target, side) => {
-      this.setState({ messages: this.state.messages.concat([
-        messages.seen(target.name, side)
-      ])});
-    });
-
-
-    game.on('phase:guard:end', (bodyguard, guarded) => {
-      this.setState({ messages: this.state.messages.concat([
-        messages.guarded(guarded)
-      ])});
-    });
+      .on('phase:guard:end', (bodyguard, guarded) => {
+        this.setState({ messages: this.state.messages.concat([
+          messages.guarded(guarded)
+        ])});
+      });
 
     //game.on('phase:day:start', () => {
     //  bot.channelMessage(messages.day(game));
@@ -93,6 +95,10 @@ export default class GameElement extends React.Component {
     //    .join(', @');
     //  bot.userMessage(minion.id, messages.werewolvesAre(werewolves));
     //});
+  }
+
+  componentWillUnmount() {
+    this.props.game.removeAllListeners();
   }
 
   render() {

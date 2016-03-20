@@ -93,8 +93,8 @@ describe('Full game', function(){
 
     // Rory votes for wolfy
     promises.push(new Promise( resolve => {
-      game.once('vote:cast', votes => {
-        assert(votes.length === 1, 'should only be one vote so far');
+      game.once('vote:cast', (player, target, votes) => {
+        assert.equal(votes.length, 1, 'should only be one vote so far');
         assert.equal(votes[0].target, 'abc');
         assert.equal(votes[0].voters[0], 'ghi');
         resolve();
@@ -104,8 +104,8 @@ describe('Full game', function(){
 
     // Rory changes his vote to nick
     promises.push(new Promise( resolve => {
-      game.once('vote:cast', votes => {
-        assert(votes.length === 1, 'Should only be one vote so far');
+      game.once('vote:cast', (player, target, votes) => {
+        assert.equal(votes.length, 1, 'Should only be one vote so far');
         assert.equal(votes[0].target, 'def');
         assert.equal(votes[0].voters[0], 'ghi');
         resolve();
@@ -115,8 +115,8 @@ describe('Full game', function(){
 
     // Wolfy votes for nick
     promises.push(new Promise( resolve => {
-      game.once('vote:cast', votes => {
-        assert(votes.length === 1, 'Should only be one vote so far');
+      game.once('vote:cast', (player, target, votes) => {
+        assert(votes.length, 1, 'Should only be one vote so far');
         assert.equal(votes[0].target, 'def');
         assert.equal(votes[0].voters[0], 'ghi');
         assert.equal(votes[0].voters[1], 'abc');
@@ -130,8 +130,8 @@ describe('Full game', function(){
       Promise.all([
           // Nicks vote should show one 'noone' vote
           new Promise( res => {
-            game.once('vote:cast', votes => {
-              assert(votes.length === 2, 'Should be two votes');
+            game.once('vote:cast', (player, target, votes) => {
+              assert(votes.length, 2, 'Should be two votes');
               assert.equal(votes[0].target, 'def');
               assert.equal(votes[0].voters[0], 'ghi');
               assert.equal(votes[0].voters[1], 'abc');
