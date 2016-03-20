@@ -2,7 +2,7 @@ import * as React from 'react';
 import {render} from 'react-dom';
 import * as Core from '../core';
 import * as cookie from 'react-cookie';
-import * as Game from './game';
+import GameElement from './game';
 
 
 class App extends React.Component {
@@ -22,47 +22,51 @@ class App extends React.Component {
     if(this.state && this.state.running && this.state.game){
       return (
         <div>
-          <Game game={this.state.game}/>
+          <GameElement game={this.state.game} />
         </div>
       );
     }
     else if(this.state && this.state.failed){
-      return <div>
-        <h3>Slack connection failed.</h3>
+      return (
         <div>
-          <button onClick={ () => this.setState({running: false, failed: false}) } className="btn btn-warning">
-            Try again?
-          </button>
+          <h3>Slack connection failed.</h3>
+          <div>
+            <button onClick={ () => this.setState({running: false, failed: false}) } className="btn btn-warning">
+              Try again?
+            </button>
+          </div>
         </div>
-      </div>
+      );
     }
     else {
-      return <form onSubmit={this.runGame}>
-        <h3>Enter your room details</h3>
-        <div className="form-group">
-          <label htmlFor="slackToken">Slack Token</label>
-          <input
-            className="form-control"
-            value={ this.state.slackToken }
-            type="text"
-            id="slackToken"
-            onChange={ evt => this.setValue('slackToken', evt.target.value) }
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="slackChannel">Slack Channel</label>
-          <input
-            className="form-control"
-            value={ this.state.slackChannel }
-            type="text"
-            id="slackChannel"
-            onChange={ evt => this.setValue('slackChannel', evt.target.value) }
-          />
-        </div>
-        <button className="btn btn-primary" type="submit">
-          Go!
-        </button>
-      </form>
+      return (
+        <form onSubmit={this.runGame}>
+          <h3>Enter your room details</h3>
+          <div className="form-group">
+            <label htmlFor="slackToken">Slack Token</label>
+            <input
+              className="form-control"
+              value={ this.state.slackToken }
+              type="text"
+              id="slackToken"
+              onChange={ evt => this.setValue('slackToken', evt.target.value) }
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="slackChannel">Slack Channel</label>
+            <input
+              className="form-control"
+              value={ this.state.slackChannel }
+              type="text"
+              id="slackChannel"
+              onChange={ evt => this.setValue('slackChannel', evt.target.value) }
+            />
+          </div>
+          <button className="btn btn-primary" type="submit">
+            Go!
+          </button>
+        </form>
+      );
     }
 
   }

@@ -4,11 +4,11 @@ import * as cookie from 'react-cookie';
 import * as messages from '../res/messages';
 
 
-class Game extends React.Component {
+export default class GameElement extends React.Component {
 
   constructor(props){
     super(props);
-    this.setState({messages:[]});
+    this.state = {messages:[]};
     const game = props.game;
 
     game.on('start', () => {
@@ -110,5 +110,3 @@ class Game extends React.Component {
   }
 
 }
-
-module.exports = Game;
