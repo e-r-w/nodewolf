@@ -4,10 +4,10 @@ const STATUS = require('../res/game-status');
 module.exports = function(bot, game, msg){
 
   if(game.status === STATUS.IDLE){
-    game.addPlayer(msg);
     bot.channelMessage(messages.newGame);
     const players = game
-      .addPlayer(msg)
+      .addPlayer({id: msg.user, name: bot.members.filter( member => member.id === msg.user)[0].name})
+      .players
       .map( player => player.name )
       .join(', @');
     bot.channelMessage(`Current lobby: @${players}`);

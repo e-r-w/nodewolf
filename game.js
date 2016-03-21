@@ -80,7 +80,7 @@ class Game extends EventEmitter {
 
   start() {
     this._assignRoles();
-    this._start();
+    return this._start();
   }
 
   end() {

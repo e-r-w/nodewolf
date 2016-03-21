@@ -1,10 +1,11 @@
 const TURN = require('../res/turn');
 const ROLE = require('../res/roles');
+const STATUS = require('../res/game-status');
 
 module.exports = function(bot, game, msg){
-  if(game.turn === TURN.BODYGUARD){
+  if(game.status === STATUS.IN_PROGRESS && game.turn === TURN.BODYGUARD){
     const player = game.getPlayer(msg);
-    if (player && !player.dead && player.role === ROLE.COMPLEX.BODYGUARD) {
+    if (player && !player.dead && player.role === ROLE.COMPLEX_VILLAGER.BODYGUARD) {
       const match = msg.text.match(/^!guard\s(<@\S+>)/gi);
       if(match && match.length > 0) {
         const playerId = match[0].replace('!guard <@', '').replace('>', '');
