@@ -2,7 +2,7 @@ const messages = require('../res/messages');
 const TURN = require('../res/turn');
 
 module.exports = function(bot, game, msg){
-  if(game.turn === TURN.WEREWOLF){
+  if( (game.turn === TURN.WEREWOLF) && msg.pm ){
     const player = game.getPlayer(msg);
     // can't vote for a werewolf
 

@@ -3,7 +3,7 @@ const ROLE = require('../res/roles');
 const STATUS = require('../res/game-status');
 
 module.exports = function(bot, game, msg){
-  if(game.status === STATUS.IN_PROGRESS && game.turn === TURN.BODYGUARD){
+  if( (game.status === STATUS.IN_PROGRESS) && (game.turn === TURN.BODYGUARD) && msg.pm ){
     const player = game.getPlayer(msg);
     if (player && !player.dead && player.role === ROLE.COMPLEX_VILLAGER.BODYGUARD) {
       const match = msg.text.match(/^!guard\s(<@\S+>)/gi);

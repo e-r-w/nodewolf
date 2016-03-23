@@ -32,7 +32,7 @@ describe('handlers', function(){
 
       game.status = STATUS.IN_PROGRESS;
 
-      alive(bot, game);
+      alive(bot, game, {pm:false});
 
       assert.equal(bot.channel[0], "\n    Players remaining: \n @nick, @wolfy, @hailey\n  ");
     });
@@ -45,7 +45,7 @@ describe('handlers', function(){
 
       game.status = STATUS.IN_PROGRESS;
 
-      end(bot, game);
+      end(bot, game, {pm:false});
 
       assert.equal(game.status, STATUS.IDLE);
 
@@ -64,7 +64,7 @@ describe('handlers', function(){
         { id: 'nick', name: 'nick', role: ROLE.STANDARD.VILLAGER }
       ];
 
-      guard(bot, game, {text: '!guard <@nick>', user: 'wolfy'});
+      guard(bot, game, {text: '!guard <@nick>', user: 'wolfy', pm: true});
 
       assert(game.players[1].protected);
 

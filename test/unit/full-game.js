@@ -160,6 +160,10 @@ describe('Full game', function(){
                 ? WINNERS.WEREWOLF
                 : WINNERS.VILLAGER;
               assert.equal(winners, expected, `Expected winners to be ${expected} but was ${winners}`);
+              assert(game.players.some( player => player.name === 'wolfy' ));
+              assert(game.players.some( player => player.name === 'nick' ));
+              assert(game.players.some( player => player.name === 'rory' ));
+              assert(game.players.some( player => player.dead ));
               res();
             });
           })
@@ -170,10 +174,6 @@ describe('Full game', function(){
 
     Promise.all(promises)
       .then( () => {
-        assert(game.players.some( player => player.name === 'wolfy' ));
-        assert(game.players.some( player => player.name === 'nick' ));
-        assert(game.players.some( player => player.name === 'rory' ));
-        assert(game.players.some( player => player.dead ));
         done();
       })
       .catch( err => done(err));

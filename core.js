@@ -11,6 +11,7 @@ const start         = require('./handlers/start');
 const end           = require('./handlers/end');
 const see           = require('./handlers/see');
 const alive         = require('./handlers/alive');
+const guard         = require('./handlers/guard');
 const dead          = require('./handlers/dead');
 const vote          = require('./handlers/vote');
 const kill          = require('./handlers/kill');
@@ -24,19 +25,23 @@ exports.run = function(token, channel) {
     const game = new Game();
 
     bot.on('message', msg => {
+
       const command = parseCommands(msg);
-      const validChannels = game.players.map( player => player.id ).concat([bot.channel, bot.id]);
-      if(validChannels.indexOf(msg.channel) >= 0){
+
+      switch(command){
+        case commands.HELP:
+          help(bot, game, msg);
+          return;
+        case commands.NEW_GAME:
+          newGame(bot, game, msg);
+          return;
+        case commands.JOIN:
+          join(bot, game, msg);
+          return;
+      }
+
+      if(game.players.map( player => player.id ).indexOf(msg.user) >= 0){
         switch(command){
-          case commands.HELP:
-            help(bot, game, msg);
-            break;
-          case commands.NEW_GAME:
-            newGame(bot, game, msg);
-            break;
-          case commands.JOIN:
-            join(bot, game, msg);
-            break;
           case commands.START:
             start(bot, game, msg);
             break;
@@ -58,8 +63,12 @@ exports.run = function(token, channel) {
           case commands.KILL:
             kill(bot, game, msg);
             break;
+          case commands.GUARD:
+            guard(bot, game, msg);
+            break;
         }
       }
+
     });
 
     game.on('start', () => {

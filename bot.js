@@ -64,7 +64,13 @@ class Bot extends EventEmitter {
   }
 
   _onMessage (msg){
-    this.emit('message', msg);
+    slack.im.list({token:this.token}, (err, data) => {
+      const pm = data.ims.filter(im => im.id === msg.channel)[0];
+      if(pm){
+        msg.pm = pm.user;
+      }
+      this.emit('message', msg);
+    });
   }
 
 }

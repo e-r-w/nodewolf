@@ -11,48 +11,49 @@ export default class GameElement extends React.Component {
     super(props);
     this.state = {messages:[]};
     const game = props.game;
+    let index = 0;
 
     game
 
       .on('start', () => {
-        this.setState({ messages: this.state.messages.concat(['The game has started!'])})
+        this.setState({ messages: this.state.messages.concat([{msg: 'The game has started!', id: index++}])})
       })
 
       .on('vote:cast', (player, target) => {
-        this.setState({ messages: this.state.messages.concat([`${player.name} has voted for ${target.name}`])});
+        this.setState({ messages: this.state.messages.concat([{msg: `${player.name} has voted for ${target.name}`, id: index++}])});
       })
 
       .on('tough', toughGuy => {
-        this.setState({ messages: this.state.messages.concat([`${toughGuy.name} survived an attack!`])});
+        this.setState({ messages: this.state.messages.concat([{msg: `${toughGuy.name} survived an attack!`, id: index++}])});
       })
 
       .on('vote:end', targets => {
         if(targets.length === 1 && targets[0] === 'noone'){
-          this.setState({ messages: this.state.messages.concat([messages.noLynch])});
+          this.setState({ messages: this.state.messages.concat([{msg: messages.noLynch, id: index++}])});
         }
         else {
-          this.setState({ messages: this.state.messages.concat([
-            messages.lynch(
+          this.setState({ messages: this.state.messages.concat([{
+            msg: messages.lynch(
               targets
-                .filter( target => target !== 'noone' )
-                .map( target => game.playerById(target) )
-                .map( target => `${target.name} (${target.role})` )
+                .filter(target => target !== 'noone')
+                .map(target => game.playerById(target))
+                .map(target => `${target.name} (${target.role})`)
                 .join(', @')
-            )
-          ])});
+            ), id: index++
+          }])});
         }
       })
 
       .on('phase:seer:end', (seer, target, side) => {
-        this.setState({ messages: this.state.messages.concat([
-          messages.seen(target.name, side)
-        ])});
+        this.setState({ messages: this.state.messages.concat([{
+          msg: messages.seen(target.name, side), id: index++
+        }])});
       })
 
       .on('phase:guard:end', (bodyguard, guarded) => {
-        this.setState({ messages: this.state.messages.concat([
-          messages.guarded(guarded)
-        ])});
+        this.setState({ messages: this.state.messages.concat([{
+          msg: messages.guarded(guarded), id: index++
+        }])});
       });
 
     //game.on('phase:day:start', () => {
@@ -81,9 +82,9 @@ export default class GameElement extends React.Component {
     //  }
     //});
     //
-    //game.on('end', winners => {
-    //  bot.channelMessage(messages.win(game, winners));
-    //});
+    game.on('end', winners => {
+      this.setState({ messages: this.state.messages.concat([{msg: 'The game was ended', id: index++}])});
+    });
     //
     //game.on('beholder', (beholder, seer) => {
     //  bot.userMessage(beholder.id, messages.seerIs(seer.name));
@@ -107,8 +108,8 @@ export default class GameElement extends React.Component {
         <h3>Nodewolf is running, refresh your browser to restart...</h3>
         {this.state && this.state.messages &&
         this.state.messages.map( message => (
-          <div>
-            {message}
+          <div id={message.id}>
+            {message.msg}
           </div>
         ))}
       </div>

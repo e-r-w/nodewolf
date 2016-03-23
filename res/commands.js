@@ -8,5 +8,6 @@ module.exports = {
   ALIVE: '!alive',
   DEAD: '!dead',
   VOTE: '!vote',
+  GUARD: '!guard',
   KILL: '!kill'
 };

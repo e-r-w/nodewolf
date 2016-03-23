@@ -222,6 +222,7 @@ class Game extends EventEmitter {
       const winners = this.isOver();
       if(winners){
         this.emit('end', winners);
+        this.end();
       }
       else {
         this.next();
@@ -310,6 +311,7 @@ class Game extends EventEmitter {
         const winners = this.isOver();
         if(winners){
           this.emit('end', winners);
+          this.end();
         }
         else {
           this.next();
@@ -355,11 +357,11 @@ class Game extends EventEmitter {
   }
 
   displayVotes() {
-    return this.votes.map( vote => `:knife: Kill @${string(this.playerById(vote.target).name).padRight(20).s} | (${vote.voters.length}) | @${vote.voters.join(', @')}`).join('\n    ');
+    return this.votes.map( vote => `:knife: Kill @${string(this.playerById(vote.target).name).padRight(20).s} | (${vote.voters.length}) | @${vote.voters.map( voter => this.playerById(voter).name ).join(', @')}`).join('\n    ');
   }
 
   displayRoleSummary() {
-    return this.players.map( player => `@${player.name} - ${player.dead ? ':x:' : ':white_check_mark:'}`).join('\n    ');
+    return this.players.map( player => `@${player.name} - ${player.dead ? ':x:' : ':white_check_mark:'} - ${player.role}`).join('\n    ');
   }
 
   isOver() {
